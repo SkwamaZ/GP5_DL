@@ -1,0 +1,40 @@
+# Задание
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+dist/
+*.egg-info/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.ipynb_checkpoints/
+
+# Виртуальные окружения
+.venv/
+venv/
+
+# Секреты
+.env
+
+# Данные и модели (не в гит, кроме placeholder .gitkeep)
+data/**
+!data/**/
+!data/**/.gitkeep
+models/**
+!models/**/
+!models/**/.gitkeep
+
+# Эксперименты MLflow (трекинг удалённый, на DagsHub)
+mlruns/
+mlartifacts/
+
+# ОС и IDE
+**/.DS_Store
+.vscode/
+.idea/

@@ -1,0 +1,44 @@
+random_seed: 42
+
+paths:
+  data_raw: data/raw
+  data_interim: data/interim
+  data_processed: data/processed
+  models: models
+  reports: reports
+
+data:
+  categories: [glasses, phone_cases, hangers]
+  wb_feedbacks_dir: data/raw/wb-feedbacks
+  catalog_file: data/processed/catalog.parquet
+  reviews_file: data/processed/reviews.parquet
+  products_per_category: 1200
+
+mlflow:
+  experiment_tabular: wb-tabular-rating
+  experiment_text: wb-review-sentiment
+
+tabular:
+  target: rating
+  features: [price, n_photos, brand, category, n_reviews, n_colors, title_len]
+  test_size: 0.2
+  val_size: 0.1
+  batch_size: 64
+  epochs: 50
+  lr: 0.001
+  hidden_sizes: [128, 64]
+  dropout: 0.1
+
+text:
+  target: mark
+  num_classes: 5
+  max_len: 200
+  vocab_size: 30000
+  test_size: 0.2
+  val_size: 0.1
+  batch_size: 64
+  epochs: 10
+  lr: 0.001
+  embed_dim: 128
+  hidden_dim: 128
+  aspects: [defect, size, delivery, quality, price]
