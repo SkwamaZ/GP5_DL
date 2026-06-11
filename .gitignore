@@ -1,5 +1,3 @@
-# Задание
-
 # Python
 __pycache__/
 *.py[cod]
@@ -33,6 +31,9 @@ models/**
 # Эксперименты MLflow (трекинг удалённый, на DagsHub)
 mlruns/
 mlartifacts/
+
+# Логи фонового парсинга
+logs/
 
 # ОС и IDE
 **/.DS_Store

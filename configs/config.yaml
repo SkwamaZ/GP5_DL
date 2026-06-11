@@ -10,9 +10,77 @@ paths:
 data:
   categories: [glasses, phone_cases, hangers]
   wb_feedbacks_dir: data/raw/wb-feedbacks
-  catalog_file: data/processed/catalog.parquet
-  reviews_file: data/processed/reviews.parquet
-  products_per_category: 1200
+  products_per_category: 4000
+
+collection:
+  search_host: search.wb.ru
+  search_version: v5
+  search_versions: [v5, v4]
+  search_sorts: [popular]
+  dest: -1257786
+  min_pause_sec: 1.5
+  jitter_sec: 1.0
+  max_retries: 5
+  backoff_base_sec: 5
+  backoff_max_sec: 120
+  empty_cooldown_base_sec: 20
+  empty_cooldown_max_sec: 150
+  empty_max_rounds: 40
+  daily_request_limit: 20000
+  max_pages: 40
+  raw_dir: data/raw/catalog
+  cache_dir: data/raw/catalog/_cache
+  catalog_interim: data/interim/catalog.parquet
+  user_agent: "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
+
+categories_meta:
+  glasses:
+    title: "Очки"
+    cat_id: 9972
+    shard: clothes_accessories1
+    search_query: "очки"
+    search_queries: ["очки", "солнцезащитные очки", "очки для зрения", "компьютерные очки",
+      "очки имиджевые", "очки женские", "очки мужские", "очки детские",
+      "очки солнцезащитные женские", "очки солнцезащитные мужские", "очки круглые",
+      "очки прямоугольные", "очки кошачий глаз", "очки авиаторы", "очки для чтения",
+      "очки с диоптриями", "очки антибликовые", "очки поляризационные", "оправа для очков",
+      "очки спортивные", "очки велосипедные", "очки горнолыжные", "очки для плавания",
+      "очки защитные", "очки строительные", "очки хамелеоны", "очки прозрачные",
+      "очки чёрные", "очки нарядные", "очки овальные", "очки безободковые", "очки титановые",
+      "очки фотохромные", "очки uv400", "очки тренд 2026"]
+  phone_cases:
+    title: "Чехлы для телефонов"
+    cat_id: 9466
+    shard: blackhole
+    search_query: "чехол для телефона"
+    search_queries: ["чехол для телефона", "чехол на айфон", "чехол iphone 15", "чехол iphone 14",
+      "чехол iphone 13", "чехол iphone 16", "чехол iphone 12", "чехол samsung",
+      "чехол samsung galaxy", "чехол samsung a54", "чехол xiaomi", "чехол redmi",
+      "чехол redmi note", "чехол honor", "чехол realme", "чехол poco", "чехол tecno",
+      "чехол infinix", "чехол oppo", "чехол vivo", "чехол силиконовый для телефона",
+      "чехол прозрачный для телефона", "чехол книжка для телефона", "чехол кошелёк для телефона",
+      "чехол с попсокетом", "чехол противоударный", "чехол магсейф", "чехол на шнурке",
+      "водонепроницаемый чехол для телефона", "чехол с рисунком", "чехол кобура", "чехол бампер",
+      "чехол для телефона женский", "чехол для телефона мужской", "чехол для телефона детский"]
+  hangers:
+    title: "Вешалки"
+    cat_id: 62508
+    shard: housecraft19
+    search_query: "вешалки для одежды"
+    search_queries: ["вешалки для одежды", "вешалки плечики", "плечики для одежды",
+      "вешалки деревянные", "вешалки пластиковые", "вешалки металлические", "вешалки бархатные",
+      "вешалки для брюк", "вешалки детские", "вешалки напольные", "вешалка настенная",
+      "вешалка для пальто", "вешалка органайзер", "вешалки для юбок", "вешалки для рубашек",
+      "вешалка крючок", "вешалка для шапок", "вешалки антискользящие", "вешалки для костюмов",
+      "вешалка для галстуков", "вешалка стойка", "вешалка для верхней одежды", "вешалка дверная",
+      "вешалки прищепки", "вешалка для сумок", "вешалки белые", "вешалки чёрные",
+      "вешалки набор 20 шт", "вешалка для платьев", "вешалка трансформер", "вешалки широкие",
+      "вешалки для джинсов", "вешалка многоярусная", "вешалка плечики деревянные", "вешалки премиум"]
+
+reviews:
+  per_class_cap: 20000
+  reviews_interim: data/interim/reviews.parquet
+  reviews_interim_jsonl: data/interim/reviews.jsonl
 
 mlflow:
   experiment_tabular: wb-tabular-rating
