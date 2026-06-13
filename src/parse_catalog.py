@@ -7,8 +7,20 @@ import pandas as pd
 from src.utils import ROOT, load_config
 from src.wb_client import DailyLimitReached, WBClient, load_json, save_json
 
-CATALOG_COLUMNS = ["nmId", "name", "brand", "category", "subject_id", "price",
-                   "rating", "n_reviews", "n_photos", "colors", "n_colors", "supplier"]
+CATALOG_COLUMNS = [
+    "nmId",
+    "name",
+    "brand",
+    "category",
+    "subject_id",
+    "price",
+    "rating",
+    "n_reviews",
+    "n_photos",
+    "colors",
+    "n_colors",
+    "supplier",
+]
 
 STALE_PAGES_LIMIT = 3
 
@@ -113,7 +125,9 @@ def main():
     reasons = {}
     complete = True
     for name, meta in cfg["categories_meta"].items():
-        rows, reason = collect_category(client, name, meta, target, max_pages, coll["raw_dir"], sorts)
+        rows, reason = collect_category(
+            client, name, meta, target, max_pages, coll["raw_dir"], sorts
+        )
         all_rows += rows
         reasons[name] = {"reason": reason, "n": len(rows)}
         if reason not in ("target", "empty", "exhausted"):

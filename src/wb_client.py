@@ -125,7 +125,9 @@ class WBClient:
             self.count_request()
             self.throttle()
             try:
-                r = creq.get(url, headers=self.headers, impersonate="chrome124", timeout=25)
+                r = creq.get(
+                    url, headers=self.headers, impersonate="chrome124", timeout=25
+                )
             except Exception:
                 time.sleep(min(delay, self.backoff_max))
                 delay = min(delay * 2, self.backoff_max)

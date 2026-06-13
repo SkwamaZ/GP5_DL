@@ -1,12 +1,14 @@
 import io
 import json
 import random
+import re
 
 import pandas as pd
 import zstandard as zstd
 
 from src.utils import ROOT, load_config
 
+NMID_RE = re.compile(rb'"nmId"\s*:\s*(\d+)')
 VALUATION_KEYS = ("productValuation", "valuation", "mark", "rating")
 
 
@@ -23,79 +25,93 @@ def get_valuation(rec):
     return None
 
 
-def iter_jsonl_zst(path):
+def iter_lines_zst(path):
     dctx = zstd.ZstdDecompressor()
     with open(path, "rb") as fh:
         with dctx.stream_reader(fh) as reader:
-            text = io.TextIOWrapper(reader, encoding="utf-8")
-            for line in text:
-                line = line.strip()
-                if line:
-                    try:
-                        yield json.loads(line)
-                    except json.JSONDecodeError:
-                        continue
+            buffered = io.BufferedReader(reader, buffer_size=1 << 20)
+            for line in buffered:
+                yield line
 
 
 def main():
     cfg = load_config()
     rcfg = cfg["reviews"]
     cap = rcfg["per_class_cap"]
-    seed = cfg["random_seed"]
+    rng = random.Random(cfg["random_seed"])
 
-    catalog_path = ROOT / cfg["collection"]["catalog_interim"]
-    if not catalog_path.exists():
-        return
-    catalog = pd.read_parquet(catalog_path)
-    if catalog.empty or "nmId" not in catalog.columns:
-        return
-
+    catalog = pd.read_parquet(ROOT / cfg["collection"]["catalog_interim"])
     nm_to_cat = {}
     for nm, cat in zip(catalog["nmId"], catalog["category"]):
         nm_to_cat[int(nm)] = cat
+    nm_set = set(nm_to_cat)
 
     feed_dir = ROOT / cfg["data"]["wb_feedbacks_dir"]
     files = sorted(feed_dir.glob("**/*.zst"))
-    if not files:
-        return
 
-    buckets = {1: [], 2: [], 3: [], 4: [], 5: []}
+    buckets = {v: [] for v in range(1, 6)}
+    seen = {v: 0 for v in range(1, 6)}
+    matched = 0
     for path in files:
-        for rec in iter_jsonl_zst(path):
-            nm = rec.get("nmId")
-            if nm is None:
+        for line in iter_lines_zst(path):
+            m = NMID_RE.search(line)
+            if m is None or int(m.group(1)) not in nm_set:
                 continue
             try:
-                nm = int(nm)
-            except (TypeError, ValueError):
+                rec = json.loads(line)
+            except json.JSONDecodeError:
                 continue
-            if nm not in nm_to_cat:
+            nm = rec.get("nmId")
+            if nm is None or int(nm) not in nm_to_cat:
                 continue
+            matched += 1
             v = get_valuation(rec)
-            if v is None:
+            text = (rec.get("text") or "").strip()
+            if v is None or not text:
                 continue
-            if len(buckets[v]) >= cap:
-                continue
-            buckets[v].append({
-                "nmId": nm,
-                "category": nm_to_cat[nm],
+            row = {
+                "nmId": int(nm),
+                "category": nm_to_cat[int(nm)],
                 "mark": v,
                 "color": rec.get("color"),
-                "text": rec.get("text"),
+                "text": text,
                 "answer": rec.get("answer"),
-            })
+            }
+            seen[v] += 1
+            if len(buckets[v]) < cap:
+                buckets[v].append(row)
+            else:
+                j = rng.randrange(seen[v])
+                if j < cap:
+                    buckets[v][j] = row
 
     rows = []
     for v in range(1, 6):
         rows += buckets[v]
-    random.seed(seed)
-    random.shuffle(rows)
+    rng.shuffle(rows)
     df = pd.DataFrame(rows)
 
     out = ROOT / rcfg["reviews_interim"]
     out.parent.mkdir(parents=True, exist_ok=True)
     df.to_parquet(out, index=False)
-    df.to_json(ROOT / rcfg["reviews_interim_jsonl"], orient="records", lines=True, force_ascii=False)
+    df.to_json(
+        ROOT / rcfg["reviews_interim_jsonl"],
+        orient="records",
+        lines=True,
+        force_ascii=False,
+    )
+
+    meta = {
+        "matched_by_nmid": matched,
+        "with_text_by_mark": seen,
+        "sampled_by_mark": {v: len(buckets[v]) for v in range(1, 6)},
+        "per_class_cap": cap,
+        "sampling": "reservoir per class, seed " + str(cfg["random_seed"]),
+        "empty_text_dropped": True,
+    }
+    (out.with_name("reviews_meta.json")).write_text(
+        json.dumps(meta, ensure_ascii=False, indent=2)
+    )
 
     print("итого отзывов:", len(df))
 

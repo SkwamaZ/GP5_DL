@@ -5,10 +5,9 @@ paths:
   data_interim: data/interim
   data_processed: data/processed
   models: models
-  reports: reports
+  docs: docs
 
 data:
-  categories: [glasses, phone_cases, hangers]
   wb_feedbacks_dir: data/raw/wb-feedbacks
   products_per_category: 4000
 
@@ -36,8 +35,6 @@ collection:
 categories_meta:
   glasses:
     title: "Очки"
-    cat_id: 9972
-    shard: clothes_accessories1
     search_query: "очки"
     search_queries: ["очки", "солнцезащитные очки", "очки для зрения", "компьютерные очки",
       "очки имиджевые", "очки женские", "очки мужские", "очки детские",
@@ -50,8 +47,6 @@ categories_meta:
       "очки фотохромные", "очки uv400", "очки тренд 2026"]
   phone_cases:
     title: "Чехлы для телефонов"
-    cat_id: 9466
-    shard: blackhole
     search_query: "чехол для телефона"
     search_queries: ["чехол для телефона", "чехол на айфон", "чехол iphone 15", "чехол iphone 14",
       "чехол iphone 13", "чехол iphone 16", "чехол iphone 12", "чехол samsung",
@@ -64,8 +59,6 @@ categories_meta:
       "чехол для телефона женский", "чехол для телефона мужской", "чехол для телефона детский"]
   hangers:
     title: "Вешалки"
-    cat_id: 62508
-    shard: housecraft19
     search_query: "вешалки для одежды"
     search_queries: ["вешалки для одежды", "вешалки плечики", "плечики для одежды",
       "вешалки деревянные", "вешалки пластиковые", "вешалки металлические", "вешалки бархатные",
@@ -89,6 +82,10 @@ mlflow:
 tabular:
   target: rating
   features: [price, n_photos, brand, category, n_reviews, n_colors, title_len]
+  log_features: [price, n_reviews]
+  plain_num_features: [n_photos, n_colors, title_len]
+  onehot_features: [category]
+  target_enc_features: [brand]
   test_size: 0.2
   val_size: 0.1
   batch_size: 64
@@ -100,8 +97,10 @@ tabular:
 text:
   target: mark
   num_classes: 5
-  max_len: 200
+  max_len_words: 64
+  max_len_tokens: 96
   vocab_size: 30000
+  bert_model: DeepPavlov/rubert-base-cased
   test_size: 0.2
   val_size: 0.1
   batch_size: 64

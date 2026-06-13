@@ -1,6 +1,6 @@
 # Диагностика качества карточек Wildberries
 
-Две связанные DL-задачи на общих данных
+Групповой проект ВШЭ по Deep Learning. Две связанные DL-задачи на общих данных
 (товары + отзывы, ключ связи `nmId`), категории: очки, чехлы на телефон, вешалки
 
 1. **Табличная (MLP):** регрессия среднего рейтинга карточки по её атрибутам. Метрики: RMSE / MAE
@@ -12,13 +12,13 @@
 
 ## Данные
 
-- **Каталог WB** — живой парсинг публичной выдачи по 3 категориям (~800–1500 товаров на категорию).
+- **Каталог WB** — живой парсинг публичной выдачи по 3 категориям (4000 товаров на категорию, 12000 всего).
   `catalog.wb.ru` переехал за антибот (HTTP 498), его **не обходим**; берём публичную
   поисковую выдачу `search.wb.ru` (только rate-limit, без антибота). Подробно —
-  [reports/COMPLIANCE.md](reports/COMPLIANCE.md)
+  [docs/COMPLIANCE.md](docs/COMPLIANCE.md)
 - **Отзывы** — CC0-датасет `wb-feedbacks`, только по `nmId`, которые есть в спарсенном каталоге
   (стратификация по оценке 1–5, всего до ~50–100k отзывов)
-- Связь датасетов — по ключу `nmId`. Поля — [reports/data_dictionary.md](reports/data_dictionary.md)
+- Связь датасетов — по ключу `nmId`. Поля — [docs/data_dictionary.md](docs/data_dictionary.md)
 - Данные в гит не коммитятся (`.gitignore`), лежат локально в `data/`
 
 ### Датасет отзывов (wb-feedbacks)
@@ -38,7 +38,7 @@ hf download nyuuzyou/wb-feedbacks --repo-type dataset --local-dir data/raw/wb-fe
 ```bash
 .venv/bin/python -m src.parse_catalog     # каталог 3 категорий -> data/interim/catalog.parquet
 .venv/bin/python -m src.filter_reviews    # отзывы по nmId каталога -> data/interim/reviews.parquet
-.venv/bin/python -m src.make_snapshot     # снапшот + графики -> reports/
+.venv/bin/python -m src.make_snapshot     # снапшот -> docs/snapshot.md / docs/snapshot.json
 ```
 
 Парсер троттлит запросы (пауза+джиттер, backoff на 429, `Retry-After`, дневной лимит),
@@ -46,17 +46,28 @@ hf download nyuuzyou/wb-feedbacks --repo-type dataset --local-dir data/raw/wb-fe
 ходит в сеть за уже скачанным). `filter_reviews` читает `.zst` стримингом, не грузя файл
 в память; датасет `wb-feedbacks` нужно положить в `data/raw/wb-feedbacks/`
 
+### Предобработка и EDA (этап 3)
+
+```bash
+.venv/bin/python -m src.prepare_tabular   # чистка каталога + сплиты -> data/processed/tabular_*.parquet
+.venv/bin/python -m src.prepare_text      # чистка отзывов, аспекты, стратифицированные сплиты -> data/processed/text_*.parquet
+```
+
+Кодирование и скейлинг — в `src/preprocess.py` (`build_tabular_preprocessor`, фит только
+на train), правила аспектов недовольства — в `src/aspects.py`. EDA с графиками и
+бизнес-инсайтами — [notebooks/eda.ipynb](notebooks/eda.ipynb)
+
 ## Структура репозитория
 
 ```
 data/
   raw/         сырые данные (парсинг WB, wb-feedbacks)
-  interim/     промежуточные
-  processed/   готовые к обучению (catalog.parquet, reviews.parquet)
+  interim/     промежуточные (catalog.parquet, reviews.parquet)
+  processed/   чистые датасеты и сплиты train/val/test
 notebooks/     EDA и черновики
-src/           код (utils, парсинг, обучение)
+src/           код (utils, парсинг, предобработка, обучение)
 models/        обученные модели (не в гит)
-reports/       бизнес-схема, инструкции, выгрузки для слайдов
+docs/          data dictionary, снапшот, правила сбора, инсайты
 configs/       config.yaml — пути, seed, параметры
 ```
 
@@ -71,7 +82,18 @@ python -m venv .venv
 .venv/bin/pip install -r requirements.txt
 ```
 
-Логирование экспериментов — удалённое на **DagsHub (MLflow-совместимый)**
+Логирование экспериментов — удалённое на **DagsHub (MLflow-совместимый)**.
+Доступы — в `.env` (не в гите): `MLFLOW_TRACKING_URI`, `MLFLOW_TRACKING_USERNAME`,
+`MLFLOW_TRACKING_PASSWORD`
+
+## Командные договорённости
+
+- Ветки: `main` — рабочая версия; задачи — в ветках `feature/<короткое-имя>`,
+  вливаем через pull request с ревью одного сокомандника
+- Коммиты: маленькие и осмысленные, по ходу работы, а не одним куском в конце.
+  Сообщение — что сделано и зачем, например `parse: кэш страниц каталога`
+- Задачи ведём в [Project plan.md](Project%20plan.md) (чекбоксы по этапам) и в issues на GitHub
+- Данные, модели, `.env` и `mlruns/` в гит не попадают
 
 ## Результаты
 

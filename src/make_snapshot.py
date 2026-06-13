@@ -1,19 +1,15 @@
 import json
 from datetime import date
 
-import matplotlib
 import pandas as pd
-
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt
 
 from src.utils import ROOT, load_config
 
 
 def main():
     cfg = load_config()
-    reports = ROOT / "reports"
-    reports.mkdir(parents=True, exist_ok=True)
+    docs = ROOT / cfg["paths"]["docs"]
+    docs.mkdir(parents=True, exist_ok=True)
 
     catalog_path = ROOT / cfg["collection"]["catalog_interim"]
     reviews_path = ROOT / cfg["reviews"]["reviews_interim"]
@@ -54,18 +50,12 @@ def main():
                 "rating_mean": rating_mean,
                 "price_median": price_median,
             }
-            cat["category"].value_counts().plot(kind="bar", rot=0)
-            plt.ylabel("товаров")
-            plt.tight_layout()
-            plt.savefig(reports / "catalog_by_category.png", dpi=120)
-            plt.close()
 
     if reviews_path.exists():
         rev = pd.read_parquet(reviews_path)
         if not rev.empty:
-            dist = rev["mark"].value_counts().sort_index()
             by_mark = {}
-            for k, v in dist.items():
+            for k, v in rev["mark"].value_counts().sort_index().items():
                 by_mark[int(k)] = int(v)
             by_cat = {}
             for k, v in rev["category"].value_counts().items():
@@ -75,16 +65,12 @@ def main():
                 "by_mark": by_mark,
                 "by_category": by_cat,
             }
-            dist.plot(kind="bar", rot=0)
-            plt.xlabel("оценка")
-            plt.ylabel("отзывов")
-            plt.tight_layout()
-            plt.savefig(reports / "reviews_by_mark.png", dpi=120)
-            plt.close()
+        rmeta_path = reviews_path.with_name("reviews_meta.json")
+        if rmeta_path.exists():
+            rmeta = json.loads(rmeta_path.read_text())
+            snap["reviews_sampling"] = rmeta
 
-    (reports / "snapshot.json").write_text(
-        json.dumps(snap, ensure_ascii=False, indent=2)
-    )
+    (docs / "snapshot.json").write_text(json.dumps(snap, ensure_ascii=False, indent=2))
 
     lines = [
         "# Снапшот сбора данных",
@@ -123,7 +109,23 @@ def main():
         lines.append("|---|---|")
         for k, v in r["by_category"].items():
             lines.append("| " + str(k) + " | " + str(v) + " |")
-    (reports / "snapshot.md").write_text("\n".join(lines) + "\n")
+        lines.append("")
+    if "reviews_sampling" in snap:
+        s = snap["reviews_sampling"]
+        lines.append("## Выборка отзывов")
+        lines.append("- Совпало по nmId каталога: " + str(s["matched_by_nmid"]))
+        lines.append("- Лимит на класс: " + str(s["per_class_cap"]))
+        lines.append("- Метод: " + s["sampling"])
+        lines.append("- Пустые тексты отброшены: да")
+    (docs / "snapshot.md").write_text("\n".join(lines) + "\n")
+
+    print(
+        "снапшот: "
+        + str(snap.get("catalog", {}).get("n_products", 0))
+        + " товаров, "
+        + str(snap.get("reviews", {}).get("n_reviews", 0))
+        + " отзывов"
+    )
 
 
 if __name__ == "__main__":
