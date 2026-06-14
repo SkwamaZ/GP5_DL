@@ -2,9 +2,11 @@ import os
 import random
 from pathlib import Path
 
+import mlflow
 import numpy as np
 import torch
 import yaml
+from dotenv import load_dotenv
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -26,3 +28,9 @@ def get_device():
 def load_config(path="configs/config.yaml"):
     with open(ROOT / path, encoding="utf-8") as f:
         return yaml.safe_load(f)
+
+
+def setup_mlflow(experiment):
+    load_dotenv(ROOT / ".env")
+    mlflow.set_tracking_uri(os.environ["MLFLOW_TRACKING_URI"])
+    mlflow.set_experiment(experiment)

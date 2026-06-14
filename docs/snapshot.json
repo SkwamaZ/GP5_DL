@@ -3,11 +3,7 @@
   "catalog_source": "search.wb.ru (v5)",
   "reviews_source": "wb-feedbacks, фильтр по nmId каталога",
   "link_key": "nmId",
-  "categories": [
-    "glasses",
-    "phone_cases",
-    "hangers"
-  ],
+  "categories": ["glasses", "phone_cases", "hangers"],
   "collection_complete": true,
   "catalog": {
     "n_products": 12000,
