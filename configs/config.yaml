@@ -99,7 +99,7 @@ text:
   max_len_words: 64
   max_len_tokens: 96
   vocab_size: 30000
-  bert_model: DeepPavlov/rubert-base-cased
+  bert_model: cointegrated/rubert-tiny2
   test_size: 0.2
   val_size: 0.1
   batch_size: 64
