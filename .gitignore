@@ -21,12 +21,8 @@ venv/
 .env
 
 # Данные и модели (не в гит, кроме placeholder .gitkeep)
-data/**
-!data/**/
-!data/**/.gitkeep
-models/**
-!models/**/
-!models/**/.gitkeep
+data/raw/**
+
 
 # Эксперименты MLflow (трекинг удалённый, на DagsHub)
 mlruns/
@@ -39,3 +35,6 @@ logs/
 **/.DS_Store
 .vscode/
 .idea/
+
+# Промты задания — скаффолдинг, не часть проекта
+prompt_*.md
