@@ -34,5 +34,7 @@ def load_config(path="configs/config.yaml"):
 
 def setup_mlflow(experiment):
     load_dotenv(ROOT / ".env")
+    # иначе MLflow печатает в stdout ссылку на ран с логином DagsHub, и он уедет в выводы ячеек
+    os.environ["MLFLOW_SUPPRESS_PRINTING_URL_TO_STDOUT"] = "true"
     mlflow.set_tracking_uri(os.environ["MLFLOW_TRACKING_URI"])
     mlflow.set_experiment(experiment)

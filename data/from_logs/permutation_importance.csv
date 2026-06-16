@@ -1,0 +1,8 @@
+признак,прирост_rmse
+brand,0.0124
+n_reviews,0.004
+category,0.0026
+price,0.0023
+n_photos,0.0012
+title_len,0.0001
+n_colors,0.0
