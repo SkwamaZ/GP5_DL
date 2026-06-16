@@ -20,9 +20,9 @@ venv/
 # Секреты
 .env
 
-# Данные и модели (не в гит, кроме placeholder .gitkeep)
+# Данные и модели
 data/raw/**
-
+models/**
 
 # Эксперименты MLflow (трекинг удалённый, на DagsHub)
 mlruns/
